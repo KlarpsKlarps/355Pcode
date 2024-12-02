@@ -1,6 +1,7 @@
 //comp code
 
 #include "main.h"
+#include "pros/adi.hpp"
 #include "pros/misc.h"
 #include "pros/motors.h"
 #include "pros/rtos.hpp"
@@ -33,8 +34,8 @@ void on_center_button() {
  */
 void initialize() {
 	pros::lcd::initialize();
-	pros::lcd::set_text(1, "im in the thick of it everybody knows");
-	pros::lcd::set_text(2, "They know me where it snows, I skid in and they froze");
+	pros::lcd::set_text(1, "drake");
+
 	
 	std::cout << "Battery Level:" << pros::battery::get_capacity();
 	pros::lcd::register_btn1_cb(on_center_button);
@@ -133,9 +134,9 @@ void autonomous() {
  // Be sure to reverse this!
 
 void opcontrol() {/*basically, this code under just conficures the motors for driver control.*/
-  pros::adi::DigitalOut mogyPISTY (DIGITAL_A);
-  pros::MotorGroup left_wheels ({-18,-17});
-  pros::MotorGroup right_wheels ({12,10});
+  pros::adi::Pneumatics mogyPISTY('A',false);
+  pros::MotorGroup right_wheels ({18,17});
+  pros::MotorGroup left_wheels ({-12,-10});
   pros::Controller master (CONTROLLER_MASTER);
   pros::Controller controller (pros::E_CONTROLLER_MASTER);
   pros::Motor upperintake (20);
@@ -143,7 +144,8 @@ void opcontrol() {/*basically, this code under just conficures the motors for dr
   pros::Motor mogo(1);
   left_wheels.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
   right_wheels.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-  mogo.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+  
+
   
 
   while (true) {
@@ -173,12 +175,15 @@ void opcontrol() {/*basically, this code under just conficures the motors for dr
 	}
 	
 	if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
-		mogyPISTY.set_value(true);
+		mogyPISTY.extend();
+    master.clear();
+    master.print(0,0,"extended");
+
 	}
 	else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
-		mogyPISTY.set_value(false);
-	}else{
-		mogo.brake();
+		mogyPISTY.retract();
+    master.clear();
+    master.print(0,0,"retracted");
 	}
 
 	
