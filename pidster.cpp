@@ -33,7 +33,7 @@ pros::Rotation rot2(9);
 lemlib::TrackingWheel track1(&rot1, lemlib::Omniwheel::NEW_2,-4.75);
 lemlib::TrackingWheel track2(&rot2,lemlib::Omniwheel::NEW_2,4.5);
 lemlib::OdomSensors sents(&track1,&track2,nullptr,nullptr,nullptr);
-lemlib::ControllerSettings latissimus_dorsi(10, // proportional gain (kP)
+lemlib::ControllerSettings latissimus_dorsi(17, // proportional gain (kP)
                                               0, // integral gain (kI)
                                               3, // derivative gain (kD)
                                               3, // anti windup
@@ -41,11 +41,11 @@ lemlib::ControllerSettings latissimus_dorsi(10, // proportional gain (kP)
                                               100, // small error range timeout, in milliseconds
                                               3, // large error range, in inches
                                               500, // large error range timeout, in milliseconds
-                                              20 // maximum acceleration (slew)
+                                              127 // maximum acceleration (slew)
 );
 
 // angular PID controller
-lemlib::ControllerSettings abdominals(8, // proportional gain (kP)
+lemlib::ControllerSettings abdominals(6.5, // proportional gain (kP)
                                               0, // integral gain (kI)
                                               10, // derivative gain (kD)
                                               3, // anti windup
@@ -89,14 +89,11 @@ void competition_initialize() {}
  */
 void autonomous() {
 	chassis.setPose(0,0,0);
-	chassis.turnToHeading(90, 1000);
-	chassis.turnToHeading(180, 1000);
-	chassis.turnToHeading(270, 1000);
-	chassis.turnToHeading(360, 1000);
+	chassis.moveToPoint(0,48, 5000);
+	
 	
 	
 
-	
 	
 
 }
