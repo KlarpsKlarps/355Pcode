@@ -45,7 +45,7 @@ lemlib::ControllerSettings latissimus_dorsi(10, // proportional gain (kP)
 );
 
 // angular PID controller
-lemlib::ControllerSettings abdominals(7, // proportional gain (kP)
+lemlib::ControllerSettings abdominals(8, // proportional gain (kP)
                                               0, // integral gain (kI)
                                               10, // derivative gain (kD)
                                               3, // anti windup
@@ -89,7 +89,11 @@ void competition_initialize() {}
  */
 void autonomous() {
 	chassis.setPose(0,0,0);
-	chassis.turnToHeading(180, 10000000);
+	chassis.turnToHeading(90, 1000);
+	chassis.turnToHeading(180, 1000);
+	chassis.turnToHeading(270, 1000);
+	chassis.turnToHeading(360, 1000);
+	
 	
 
 	
