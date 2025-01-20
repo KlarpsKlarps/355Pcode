@@ -9,9 +9,10 @@
 #include "pros/motor_group.hpp"
 #include "pros/motors.h"
 #include "pros/motors.hpp"
-#include "pros/optical.hpp"
 #include "pros/rotation.hpp"
 pros::Motor babybrown(5);
+pros::Rotation babymove(20);
+int primemodewall=30;
 pros::MotorGroup leftweels({-1,	-2,-3},pros::MotorGearset::blue);
 pros::MotorGroup rightweels({13,12,18},pros::MotorGearset::blue);
 pros::Motor convey(14);
@@ -30,10 +31,8 @@ lemlib::Drivetrain drivetrain(&leftweels,
 
 
 	);
-pros::Rotation rot1(8);
-pros::Rotation rot2(9);
 lemlib::OdomSensors sensors(nullptr,nullptr,nullptr,nullptr,nullptr);
-lemlib::ControllerSettings lateral_movement(8, // proportional gain (kP)
+lemlib::ControllerSettings lateral_movement(1000, // proportional gain (kP)
                                               0, // integral gain (kI)
                                               0, // derivative gain (kD)
                                               0, // anti windup
@@ -45,7 +44,7 @@ lemlib::ControllerSettings lateral_movement(8, // proportional gain (kP)
 );
 
 // angular PID controller
-lemlib::ControllerSettings angular_movement(7, // proportional gain (kP)
+lemlib::ControllerSettings angular_movement(1000, // proportional gain (kP)
                                               0, // integral gain (kI)
                                               1, // derivative gain (kD)
                                               0, // anti windup
@@ -63,7 +62,20 @@ lemlib::Chassis chassis(drivetrain, // drivetrain settings
 
 
 void initialize(){
+	leftweels.tare_position();
+	pros::delay(500);
+	rightweels.tare_position();
+	pros::delay(500);
 	chassis.calibrate();
+	pros::delay(500);
+	while (true){
+		pros::lcd::print(0,"X:%f",chassis.getPose().x);
+		pros::lcd::print(0,"Y:%f",chassis.getPose().y);
+		pros::lcd::print(0,"THETA:%f",chassis.getPose().theta);
+		pros::delay(20);
+		
+	}
+
 	
 }
 void disabled() {}
@@ -91,8 +103,7 @@ void competition_initialize() {}
  * from where it left off.
  */ 
 
-
-void allianceAndSingularRingright(){
+/*void allianceAndSingularRingright(){
 	chassis.moveToPoint(0,12,2000);
 	chassis.turnToHeading(90,2000);
 	chassis.moveToPoint(5, 12, 2000);
@@ -201,10 +212,12 @@ void skilz(){
 
 
 }
+*/
 void autonomous(){
-	
 	chassis.setPose(0,0,0);
-	chassis.moveToPoint(0,48,5000);
+	chassis.turnToHeading(90, 5000);
+	chassis.waitUntilDone();
+	
 	
 
 
@@ -228,31 +241,19 @@ void autonomous(){
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+	pros::Motor babybrown(5);
+	pros::Rotation babymove(20);
+	int primemodewall=30;
 	pros::MotorGroup leftweels({-1,	-2,-3},pros::MotorGearset::blue);
 	pros::MotorGroup rightweels({13,12,18},pros::MotorGearset::blue);
 	pros::Motor convey(14);
-	pros::adi::Pneumatics clamp1('a',false);
-	pros::adi::Pneumatics clamp2('b',false);
+	pros::adi::Pneumatics clamp1('a',true);
+	pros::adi::Pneumatics clamp2('b',true);
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 	pros::Motor intake(11);
-	intake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-	convey.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-	bool sigma=true;
-	pros::Optical racistmech(4);
-	pros::Motor babybrown(5);
-	babybrown.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	bool conveyormoving=true;
-	leftweels.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-	rightweels.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+	
 	
 	while (true) {
-		// print robot location to the brain screen
-        pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
-        pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
-        pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
-            // delay to save resources
-        pros::delay(20);
-		int race=racistmech.get_hue();
 		
 		leftweels.move(master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
 		rightweels.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y));
@@ -260,12 +261,12 @@ void opcontrol() {
 		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
 			intake.move(-1000);
 			convey.move(1000);
-			conveyormoving=false;
+	
 		}
 		else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)){
 			intake.move(1000);
 			convey.move(-1000);
-			conveyormoving=true;
+
 		}
 		else{
 			intake.brake();
@@ -281,14 +282,7 @@ void opcontrol() {
 			clamp2.retract();
 			pros::delay(250);
 		}
-		//anti blue
-		if ((race<=180&&race>=300)&&(conveyormoving==true)){
-			convey.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-			pros::delay(0);
-			convey.brake();
-			pros::delay(250);
-			convey.brake();
-			
+
 
 			convey.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 		}
@@ -301,6 +295,13 @@ void opcontrol() {
 		else{
 			babybrown.brake();
 		}
+
+
+
+
+	pros::delay(20);
+}
+
 
 
 
