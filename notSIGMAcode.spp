@@ -1,85 +1,85 @@
-#include "main.h"
-#include "lemlib/chassis/chassis.hpp"
-#include "lemlib/chassis/trackingWheel.hpp"
-#include "pros/abstract_motor.hpp"
-#include "pros/adi.hpp"
-#include "pros/llemu.hpp"
-#include "pros/misc.h"
-#include "pros/misc.hpp"
-#include "lemlib/api.hpp" // IWYU pragma: keep
-#include "pros/motor_group.hpp"
-#include "pros/motors.h"
-#include "pros/motors.hpp"
-#include "pros/rotation.hpp"
-#include "pros/rtos.hpp"
-pros::Motor babybrown(5);
-pros::Rotation babymove(20);
-int primemodewall=30;
-pros::MotorGroup leftweels({-1,	-2,-3},pros::MotorGearset::blue);
-pros::MotorGroup rightweels({13,12,18},pros::MotorGearset::blue);
 
-pros::Motor convey(14);
+#include "main.h"
+#include "lemlib/api.hpp" // IWYU pragma: keep
+#include "pros/misc.h"
+#include "pros/motors.h"
+#include "pros/rotation.hpp"
+pros::MotorGroup left({-1,-2,-3});
+pros::MotorGroup right({13,12,18});
 pros::adi::Pneumatics clamp1('a',true);
 pros::adi::Pneumatics clamp2('b',true);
-pros::Controller master(pros::E_CONTROLLER_MASTER);
+pros::Motor babybrown(5);
 pros::Motor intake(11);
-pros::Rotation leftrot(8);
-pros::Rotation rightrot(-9);
-lemlib::TrackingWheel v1(&leftrot, lemlib::Omniwheel::NEW_275, -7.5);
-lemlib::TrackingWheel v2(&rightrot, lemlib::Omniwheel::NEW_275, 7.5);
-lemlib::Drivetrain drivetrain(&leftweels,
-								&rightweels,
-								13.75,
-								lemlib::Omniwheel::NEW_275,
-								450,
-								2
-
-
-
-
+pros::Motor convey(14);
+lemlib::Drivetrain drivetrain(&left, // left motor group
+                              &right, // right motor group
+                              10, // 10 inch track width
+                              lemlib::Omniwheel::NEW_275, // using new 4" omnis
+                              360, // drivetrain rpm is 360
+                              2 // horizontal drift is 2 (for now)
 );
-lemlib::OdomSensors sensors(&v1, // vertical tracking wheel 1, set to null
-                            &v2, // vertical tracking wheel 2, set to nullptr as we are using IMEs
+pros::Rotation rotleft(8);
+pros::Rotation rotright(-6);
+pros::Rotation ladybrown(15);
+lemlib::TrackingWheel vert1(&rotleft, lemlib::Omniwheel::NEW_275, -7.5);
+// vertical tracking wheel
+lemlib::TrackingWheel vert2(&rotright, lemlib::Omniwheel::NEW_275, 7.5);
+lemlib::OdomSensors sensors(&vert1, // vertical tracking wheel 1, set to null
+                            &vert2, // vertical tracking wheel 2, set to nullptr as we are using IMEs
                             nullptr, // horizontal tracking wheel 1
                             nullptr, // horizontal tracking wheel 2, set to nullptr as we don't have a second one
                             nullptr // inertial sensor
 );
-
-lemlib::ControllerSettings lateral_movement(20, // proportional gain (kP)
+// lateral PID controller
+lemlib::ControllerSettings lateral_controller(20, // proportional gain (kP)
                                               0, // integral gain (kI)
-                                              0, // derivative gain (kD)
-                                              0, // anti windup
-                                              0, // small error range, in inches
-                                              0, // small error range timeout, in milliseconds
-                                              0, // large error range, in inches
-                                              0, // large error range timeout, in milliseconds
-                                              60 // maximum acceleration (slew)
+                                              6, // derivative gain (kD)
+                                              3, // anti windup
+                                              1, // small error range, in inches
+                                              100, // small error range timeout, in milliseconds
+                                              3, // large error range, in inches
+                                              500, // large error range timeout, in milliseconds
+                                              90 // maximum acceleration (slew)
 );
 
 // angular PID controller
-lemlib::ControllerSettings angular_movement(2.2, // proportional gain (kP)
+lemlib::ControllerSettings angular_controller(2.3, // proportional gain (kP)
                                               0, // integral gain (kI)
                                               0, // derivative gain (kD)
-                                              0, // anti windup
-                                                 0, // small error range, in degrees
-                                              0, // small error range timeout, in milliseconds
-                                              0, // large error range, in degrees
-                                              0, // large error range timeout, in milliseconds
-                                              60 // maximum acceleration (slew)
+                                              3, // anti windup
+                                              1, // small error range, in degrees
+                                              100, // small error range timeout, in milliseconds
+                                              3, // large error range, in degrees
+                                              500, // large error range timeout, in milliseconds
+                                              90 // maximum acceleration (slew)
 );
 lemlib::Chassis chassis(drivetrain, // drivetrain settings
-                        lateral_movement, // lateral PID settings
-                        angular_movement, // angular PID settings
+                        lateral_controller, // lateral PID settings
+                        angular_controller, // angular PID settings
                         sensors // odometry sensors
 );
 
+void on_center_button() {
+	static bool pressed = false;
+	pressed = !pressed;
+	if (pressed) {
+		pros::lcd::set_text(2, "I was pressed!");
+	} else {
+		pros::lcd::clear_line(2);
+	}
+}
 
+/**
+ * Runs initialization code. This occurs as soon as the program is started.
+ *
+ * All other competition modes are blocked by initialize; it is recommended
+ * to keep execution time for this mode under a few seconds.
+ */
 void initialize() {
     pros::lcd::initialize(); // initialize brain screen
     chassis.calibrate(); // calibrate sensors
-	leftweels.tare_position();
-	rightweels.tare_position();
-	pros::Task screen_task([&]() {
+    // print position to brain screen
+    pros::Task screen_task([&]() {
         while (true) {
             // print robot location to the brain screen
             pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
@@ -89,8 +89,13 @@ void initialize() {
             pros::delay(20);
         }
     });
-    	
 }
+
+/**
+ * Runs while the robot is in the disabled state of Field Management System or
+ * the VEX Competition Switch, following either autonomous or opcontrol. When
+ * the robot is enabled, this task will exit.
+ */
 void disabled() {}
 
 /**
@@ -114,88 +119,55 @@ void competition_initialize() {}
  * If the robot is disabled or communications is lost, the autonomous task
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
- */ 
-
-
-void epicredalliancelefty(){
-	chassis.setPose(0,0,0);
-	chassis.moveToPose(0, -19,0, 2000,{.forwards = false});
-	chassis.turnToHeading(-90,1000);
-	chassis.moveToPose(-10, -19,-90, 2000,{.forwards = true});
-	pros::delay(1000);
+ */
+void autonomous() {
+    babybrown.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    chassis.setPose(0,0,0);
+    clamp1.extend();
+    clamp2.extend();
+    chassis.moveToPose(0,-18.7,0,2000,{.forwards=false});
+    chassis.turnToHeading(-90, 1000);
+    chassis.waitUntilDone();
+    chassis.moveToPose(-8.25, -16, -90, 1000,{.forwards=true});
+    chassis.turnToHeading(-90, 500);
 	babybrown.move(-70);
-	pros::delay(500);
-	babybrown.brake();
+    pros::delay(500);
+    babybrown.brake();
 	pros::delay(700);
 	babybrown.move(70);
-	pros::delay(200);
+	pros::delay(400);
 	babybrown.brake();
 	pros::delay(1000);
-	chassis.moveToPose(6, -19, -90, 4000);
-}
-void allianceAndSingularRingright(){
-	chassis.moveToPoint(0,12,2000);
-	chassis.turnToHeading(90,2000);
-	chassis.moveToPoint(5, 12, 2000);
-	babybrown.move(-100);
-	pros::delay(200);
-	babybrown.brake();
-	babybrown.move(100);
-	pros::delay(200);
-	babybrown.brake();
-	chassis.moveToPoint(-48, -12, 0);
-	chassis.turnToHeading(-90, 5000);
-	clamp1.extend();
-	clamp2.extend();
-	chassis.turnToHeading(-180, 3000);
-	intake.move(100);
-	convey.move(100);
-	
-}
-void allianceAndSingularRingrightey(){
-	chassis.moveToPoint(0,12,2000);
-	chassis.turnToHeading(-90,2000);
-	chassis.moveToPoint(5, 12, 2000);
-	babybrown.move(-100);  
-	pros::delay(200);
-	babybrown.brake();
-	babybrown.move(100);
-	pros::delay(200);
-	babybrown.brake();
-	chassis.moveToPoint(-48, -12, 0);
-	chassis.turnToHeading(-90, 2000);
-	clamp1.extend();
-	clamp2.extend();
-	chassis.turnToHeading(0, 2000);
-	chassis.moveToPoint(-48, 12, 2000);
-	intake.move(100);
-	convey.move(100);
-	
-}
-void skilz(){
-	 
+    chassis.setPose(0,0,0);
+    chassis.moveToPose(0,-7,0,500);
+    chassis.turnToHeading(-40, 1000);
+    chassis.setPose(0,0,40);
+    chassis.moveToPose(0, -45, 0, 2000,{.forwards=false});
+    chassis.waitUntilDone();
+    pros::delay(500);
+    clamp1.retract();
+    clamp2.retract();
+    pros::delay(800);
 
+    chassis.turnToHeading(235,1000);
+    chassis.setPose(0,0,240);
+    babybrown.move(-100);
+    pros::delay(300);
+    babybrown.brake();
+    intake.move(100)&&convey.move(-100);
+    chassis.moveToPose(0, 90, 0, 2000,{.forwards=true});
+    chassis.waitUntilDone();
+    pros::delay(300);
+    chassis.moveToPose(0,-5,0,2000,{.forwards=false});
+    
+    
+
+
+
+    
 
 
 }
-
-void autonomous(){
-	epicredalliancelefty();
-
-	/*chassis.moveToPose(0, -15,0, 4000,{.forwards = false});
-	chassis.turnToHeading(-90,1000);
-	chassis.moveToPose(-6, -19,-90, 2000,{.forwards = true});*/
-	/*pros::delay(1000);
-	babybrown.move(-70);
-	pros::delay(500);
-	babybrown.brake();
-	pros::delay(700);
-	babybrown.move(70);
-	pros::delay(200);
-	babybrown.brake();*/
-}
-
-/*{.direction=AngularDirection::CCW_COUNTERCLOCKWISE,.minSpeed=100}*/
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -211,67 +183,50 @@ void autonomous(){
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-	pros::Motor babybrown(5);
-	int primemodewall=30;
-	pros::MotorGroup leftweels({-1,	-2,-3},pros::MotorGearset::blue);
-	pros::MotorGroup rightweels({13,12,18},pros::MotorGearset::blue);
-	pros::Motor convey(14);
-	pros::adi::Pneumatics clamp1('a',true);
-	pros::adi::Pneumatics clamp2('b',true);
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
-	pros::Motor intake(11);
-	babybrown.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	
-	
-	while (true) {
-	 	 // print robot location to the brain screen
-		
-		leftweels.move(master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-		rightweels.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y));
+    babybrown.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
-		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
+
+	while (true) {  
+		left.move(master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+		right.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y));
+        if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
 			intake.move(-1000);
 			convey.move(1000);
 	
 		}
-		else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)){
-			intake.move(1000);
+        else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)){
+            intake.move(1000);
 			convey.move(-1000);
-
+        }
+        else{
+            intake.brake();
+            convey.brake();
+        }
+        if(master.get_digital(pros::E_CONTROLLER_DIGITAL_X)){
+			babybrown.move(-100);
+	
 		}
-		else{
-			intake.brake();
-			convey.brake();
-		}
-		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && ((clamp2.is_extended()==false)&&(clamp1.is_extended()==false))){
+        else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B)){
+            babybrown.move(100);
+        }
+        else{
+            babybrown.brake();
+        }
+        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && ((clamp2.is_extended()==false)&&(clamp1.is_extended()==false))){
 			clamp1.extend();
 			clamp2.extend();
 			pros::delay(250);
-		}
-		else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && ((clamp2.is_extended()==true)&&(clamp1.is_extended()==true))){
+        }
+        else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && ((clamp2.is_extended()==true)&&(clamp1.is_extended()==true))){
 			clamp1.retract();
 			clamp2.retract();
 			pros::delay(250);
-		}
-		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)){
-			babybrown.move(-100);
-		}
-		else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B)){
-			babybrown.move(100);
-		}
-		else{
-			babybrown.brake();
-		}
+        }
+    
 
-
-		}
 		
-
-
-
-
-
-	pros::delay(20);
+        pros::delay(20);
+	}
 }
-
 
