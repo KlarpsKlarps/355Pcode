@@ -170,17 +170,36 @@ void ultimacyskills(){
     pros::delay(500);
     convey.brake();
     chassis.setPose(0,0,0);
-    chassis.moveToPose(0, 15.5, 0, 2000,{.minSpeed=100});
-    chassis.moveToPose(22, 15.5, -90, 2000,{.forwards=false,.minSpeed=60},false);
+    chassis.moveToPose(0, 15, 0, 1000,{.minSpeed=100});
+    chassis.moveToPose(23, 15, -90, 2000,{.forwards=false,.maxSpeed=60},false);
     clamp1.extend();
     clamp2.extend();
-    chassis.moveToPose(22, 15.5, -90, 2000,{.forwards=false,.minSpeed=100},false);
+    chassis.moveToPose(21, 15, -90, 2000,{.forwards=false,.minSpeed=100},false);
     pros::delay(1000);
-    chassis.moveToPose(22, 15.5, 0, 1000,{.forwards=true,.maxSpeed=60},false);
+    chassis.moveToPose(21, 15, 0, 1000,{.forwards=true,.maxSpeed=60},false);
     score.move(500);
-    chassis.moveToPose(23, 15.5, 0, 500,{.forwards=false,.maxSpeed=60},false);
-    chassis.moveToPose(23, 37, 0, 2000,{.maxSpeed=100},false);
-    chassis.moveToPose(43, 37, 90,2000,{.maxSpeed=60});
+    chassis.moveToPose(21, 33, 0, 2000,{.maxSpeed=100},false);
+    chassis.moveToPose(44, 37, 90,3000,{.maxSpeed=60});
+    chassis.turnToHeading(180, 2000);
+    chassis.moveToPose(46, 10, 180, 4000,{.maxSpeed=40});
+    chassis.turnToHeading(180, 1000);
+    chassis.moveToPose(46, 15, 180, 1000,{.forwards=false},false);
+    chassis.moveToPose(60, 15, 90, 2000);
+    chassis.turnToHeading(0, 2000,{},false);
+    chassis.moveToPose(62, 0, 0, 2000,{.forwards=false},false);
+    chassis.turnToHeading(-45, 1000);
+    clamp1.retract();
+    clamp2.retract();
+    score.move(-100);                
+    pros::delay(300);
+    score.brake();
+    //start of quadrant 2
+    chassis.moveToPose(62, 20, 0, 1000);
+    chassis.turnToHeading(90, 1000);
+    chassis.moveToPose(-25, 20, 90, 4000,{.forwards=false,.maxSpeed=80});
+
+
+    /*
     chassis.moveToPose(43, 37, 0,2000,{.maxSpeed=60});
     
 
@@ -196,7 +215,7 @@ void ultimacyskills(){
     chassis.turnToHeading(-90, 1000);
     chassis.moveToPose(60,0,-90, 2000,{.forwards=false},false);
     clamp1.retract();
-    clamp2.retract();
+    clamp2.retract();*/
     
 
     
