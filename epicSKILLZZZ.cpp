@@ -1,3 +1,4 @@
+
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
 #include "lemlib/chassis/trackingWheel.hpp"
@@ -45,9 +46,9 @@ lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP)
 );
 
 // angular PID controller
-lemlib::ControllerSettings angular_controller(9, // proportional gain (kP)
+lemlib::ControllerSettings angular_controller(15, // proportional gain (kP)
                                               0, // integral gain (kI)
-                                              50, // derivative gain (kD)
+                                              70, // derivative gain (kD)
                                               0, // anti windup
                                               0, // small error range, in degrees
                                               00, // small error range timeout, in milliseconds
@@ -125,40 +126,11 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void mainleft(){
-    chassis.setPose(0,0,0);
-    chassis.moveToPose(0, -17, 0, 1000,{.forwards=false},false);
-    chassis.moveToPose(0,-22,0,1000,{.forwards=false},false);
-    clamp1.extend();
-    clamp2.extend();
-    pros::delay(1000);
-    intake.move(600);
-    convey.move(-600);
-    chassis.turnToHeading(90, 1000);
-    chassis.moveToPose(15, -22, 90,2000,{.forwards=true},false);
-    chassis.moveToPose(-50,-17, 90, 1000,{.forwards=true},false);
-    intake.move(100);
-    convey.move(-100);
-}
-void mainCode(){
-    chassis.setPose(0,0,0);
-    chassis.moveToPose(0, -17, 0, 1000,{.forwards=false},false);
-    chassis.moveToPose(0,-22,0,1000,{.forwards=false},false);
-    clamp1.extend();
-    clamp2.extend();
-    pros::delay(1000);
-    intake.move(600);
-    convey.move(-600);
-    chassis.turnToHeading(90, 1000);
-    chassis.moveToPose(15, -22, 90,2000,{.forwards=true},false);
-    chassis.moveToPose(-30,-17, 90, 10000,{.forwards=true},false);
-    intake.move(100);
-    convey.move(-100);
 
 
 
 
-}
+
 void ultimacyskills(){
     imu.tare_heading();
     verticale.reset_position();
@@ -171,12 +143,13 @@ void ultimacyskills(){
     convey.brake();
     chassis.setPose(0,0,0);
     chassis.moveToPose(0, 15, 0, 1000,{.minSpeed=100});
-    chassis.moveToPose(23, 15, -90, 2000,{.forwards=false,.maxSpeed=60},false);
+    chassis.turnToHeading(-90, 1000);
+    chassis.moveToPoint(23, 15.5, 2000,{.forwards=false,.maxSpeed=60},false);
     clamp1.extend();
     clamp2.extend();
-    chassis.moveToPose(21, 15, -90, 2000,{.forwards=false,.minSpeed=100},false);
+    chassis.moveToPose(20, 15, -90, 2000,{.forwards=false,.minSpeed=100},false);
     pros::delay(1000);
-    chassis.moveToPose(21, 15, 0, 1000,{.forwards=true,.maxSpeed=60},false);
+    chassis.moveToPose(20, 15, 0, 1000,{.forwards=true,.maxSpeed=60},false);
     score.move(500);
     chassis.moveToPose(21, 33, 0, 2000,{.maxSpeed=100},false);
     chassis.moveToPose(44, 37, 90,3000,{.maxSpeed=60});
@@ -199,65 +172,7 @@ void ultimacyskills(){
     chassis.moveToPose(-25, 20, 90, 4000,{.forwards=false,.maxSpeed=80});
 
 
-    /*
-    chassis.moveToPose(43, 37, 0,2000,{.maxSpeed=60});
-    
-
-    chassis.moveToPose(54, 60, 0,3000);
-    chassis.turnToHeading(90, 1000);
-
-    chassis.turnToHeading(180, 2000);
-    chassis.moveToPose(57, 5, 180,3000,{.maxSpeed=60});
-    chassis.moveToPose(57, 30, 180,2000,{.forwards=false,.maxSpeed=60,});
-    chassis.turnToHeading(-140, 3000);
-    chassis.moveToPose(30, -10, -10, 4000,{.forwards=true,.maxSpeed=40});
-    chassis.turnToHeading(180, 1000);
-    chassis.turnToHeading(-90, 1000);
-    chassis.moveToPose(60,0,-90, 2000,{.forwards=false},false);
-    clamp1.retract();
-    clamp2.retract();*/
-    
-
-    
-    
-    /*chassis.moveToPose(52, 15, 0, 2000,{.forwards=true,.maxSpeed=100});
-    chassis.moveToPose(52, 15, -90, 2000,{.forwards=true,.maxSpeed=100});
-    chassis.moveToPose(60, 15, -90, 2000,{.forwards=false},false);
-    clamp1.retract();
-    clamp2.retract();
-    chassis.moveToPose(0, 0, 0, 5000);
-    //part two
-    chassis.setPose(0,0,0);
-    chassis.moveToPose(0, 15.5, 0, 3000,{.maxSpeed=60});
-    chassis.moveToPose(-25, 15.5, 90, 3000,{.forwards=false,.maxSpeed=60},false);
-    clamp1.extend();
-    clamp2.extend();
-    chassis.moveToPose(-25, 15.5, 0, 3000,{.forwards=true,.maxSpeed=60},false);
-    score.move(500);
-    chassis.moveToPose(-25, 41, 0, 2000,{.maxSpeed=60},false);
-    chassis.moveToPose(-50, 41, -90,2000,{.maxSpeed=60});
-    chassis.moveToPose(-50, 65, 0,2000,{.maxSpeed=60});
-    chassis.moveToPose(-50, 65, -90,2000);
-    chassis.moveToPose(-60, 10, -180,4000,{.maxSpeed=60});
-    chassis.moveToPose(-60, 35, -180,2000,{.forwards=false,.minSpeed=100,});
-    chassis.moveToPose(-60, 35, 130,1000,{.maxSpeed=60});
-    chassis.moveToPose(-52, 1.5, -180, 3000,{.forwards=true,.maxSpeed=20});
-    chassis.moveToPose(-52, 0, -180, 5000,{.forwards=true,.maxSpeed=100});
-    chassis.turnToHeading(180, 1000);
-    chassis.moveToPose(52, 15, 0, 2000,{.forwards=true,.maxSpeed=100});
-    chassis.moveToPose(52, 15, 90, 2000,{.forwards=true,.maxSpeed=100});
-    chassis.moveToPose(60, 15, 90, 2000,{.forwards=false},false);
-    clamp1.retract();
-    clamp2.retract();*/
-
-    
-    
-
- 
-    
-
-  
-    
+   
     
 
     
@@ -289,26 +204,93 @@ void rightthingy(){
     dive.brake();
     intake.brake();
 }
+ASSET(noe_txt);
 void autonomous() {
-    ultimacyskills();
-    
-}
-void epicness(){
+    score.move(600);
+    pros::delay(2000);
     chassis.setPose(0,0,0);
-    chassis.moveToPose(0, -17, 0, 1000,{.forwards=false},false);
-    chassis.moveToPose(0,-22,0,1000,{.forwards=false},false);
+    imu.tare();
+    chassis.moveToPoint(0, 15, 1000);
+    chassis.turnToHeading(-90, 1000);
+    score.brake();
+    chassis.moveToPose(24,15,-90,2000,{.forwards=false},false);
     clamp1.extend();
     clamp2.extend();
     pros::delay(1000);
-    intake.move(600);
-    convey.move(-600);
+    chassis.turnToHeading(0, 1000,{},false);
+    imu.tare();
+    score.move(66600);
+    chassis.moveToPoint(22, 39, 2000);
+    chassis.turnToPoint(57,66.5,1000);
+   
+    chassis.moveToPose(57, 66.5,60, 3000,{.minSpeed=100});
     chassis.turnToHeading(90, 1000);
-    chassis.moveToPose(15, -22, -90,2000,{.forwards=true},false);
-    chassis.moveToPose(-30,-17, -90, 3000,{.forwards=true},false);
-    intake.move(100);
-    convey.move(-100);
+    chassis.turnToHeading(180, 1000);
+    chassis.moveToPoint(51, 50, 2000,{.minSpeed=127});
+    chassis.moveToPoint(51, 5, 3000,{.maxSpeed=60});
+    pros::delay(500);
+    chassis.moveToPoint(50, 34,1000,{.forwards=false});
+    chassis.turnToPoint(60,10,2000);
+    chassis.moveToPose(60, 10, 180,2000,{.minSpeed=127});
+    chassis.moveToPose(60, 10, 180,2000,{.minSpeed=127});
+
+    chassis.turnToHeading(90, 1000);
+    chassis.turnToHeading(-35, 1000);
+    chassis.moveToPoint(70, 0, 2000,{.forwards=false,.maxSpeed=60});
+    clamp1.retract();
+    clamp2.retract();
+    pros::delay(1000);
+    score.move(-100);
+    pros::delay(200);
+    score.brake();
+    pros::delay(1000);
+    left.move(100);
+    right.move(100);
+    pros::delay(500);
+    left.brake();
+    right.brake();
+
+    
+    chassis.turnToHeading(90, 1000);
+    chassis.moveToPose(-15,10,100,6000,{.forwards=false},false);
+    clamp1.extend();
+    clamp2.extend();
+    chassis.setPose(-24,15,90);
+
+    //start of quad tew
+    pros::delay(1000);
+    chassis.turnToHeading(0, 1000,{},false);
+    score.move(66600);
+    chassis.moveToPoint(-22, 39, 2000);
+    chassis.turnToPoint(-55,66.5,1000);
+   
+    chassis.moveToPose(-55, 66.5,-60, 3000,{.minSpeed=100});
+    chassis.turnToHeading(-90, 1000);
+    chassis.turnToHeading(180, 1000);
+    chassis.moveToPoint(-48, 50, 2000,{.minSpeed=127});
+    chassis.moveToPoint(-48, 5, 3000,{.maxSpeed=60});
+    pros::delay(500);
+    chassis.moveToPoint(-50, 34,1000,{.forwards=false});
+    chassis.turnToPoint(-60,10,2000);
+    chassis.moveToPose(-60, 10, 180,2000,{.minSpeed=127});
+    chassis.moveToPose(-60, 10, 180,2000,{.minSpeed=127});
+    
+    chassis.turnToHeading(35, 1000);
+    chassis.moveToPoint(-70, 0, 2000,{.forwards=false,.maxSpeed=60});
+    clamp1.retract();
+    clamp2.retract();
+    pros::delay(1000);
+    score.move(-100);
+    pros::delay(200);
+    score.brake();
+
+
+
+
+  
     
 }
+
 
 
 
